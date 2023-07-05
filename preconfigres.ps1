@@ -9,18 +9,18 @@ $backend_location = "norwayeast"
 $backendAzureRmKey = "terraform.tfstate"
 
 # Key Vault variables
-$backend_kv = "bcknd-tf-kv"
+$backend_kv = "bcknd-kvsc-tfaz"
 
 # Key Vault Secret Names
-$backend_AZDOSrvConnName_kv_sc = "AZDOName_kv_sc"
-$backend_RGName_kv_sc = "RGName_kv_sc"
-$backend_STGPass_Name_kv_sc = "STGName_kv_sc"
-$backend_ContName_kv_sc = "ContName_kv_sc"
+$backend_AZDOSrvConnName_kv_sc = "AZDONamec"
+$backend_RGName_kv_sc = "RGName"
+$backend_STGPass_Name_kv_sc = "STGNamec"
+$backend_ContName_kv_sc = "ContName"
 $backendAzureRmKey_kv_sc = "TFStatefileName"
-$backend_SUBid_Name_kv_sc = "SUBidName_kv_sc"
-$backend_TNTid_Name_kv_sc = "TNTidName_kv_sc"
-$backend_STGPass_Name_kv_sc = "STGPass_kv_sc"
-$backend_SPNPass_Name_kv_sc = "SPNPass_kv_sc"
+$backend_SUBid_Name_kv_sc = "SUBidName"
+$backend_TNTid_Name_kv_sc = "TNTidName"
+$backend_STGPass_Name_kv_sc = "STGPass"
+$backend_SPNPass_Name_kv_sc = "SPNPass"
 
 # Set the Azure DevOps organization and project details
 $backend_org = "https://dev.azure.com/tfazlab"
@@ -33,6 +33,9 @@ $description = "backendVB"
 
 # Azure DevOps Connection variables
 $backend_AZDOSrvConnName = "azdo-tfaz-conn"
+
+# Repository name
+$backend_RepoName = "tfazlab"
 
 Write-Host "Creating service principal..." -ForegroundColor Yellow
 $backend_SPNPass = $(az ad sp create-for-rbac --name $backend_spn --role $backend_spn_role --scopes /subscriptions/64208b73-267b-43b1-9bb1-649f128147e6 --query 'password' -o tsv)
@@ -113,7 +116,8 @@ $env:AZURE_DEVOPS_EXT_PAT = $backend_pat
 Write-Host "Creating Azure DevOps service endpoint..." -ForegroundColor Yellow
 
 # Set Default DevOps Organisation and Project
-az devops configure --defaults organization=$backend_org project=$backend_project
+az devops configure --defaults organization=$backend_org --verbose
+az devops configure --defaults project=$backend_project --verbose
 
 # Create DevOps Service Connection
 az devops service-endpoint azurerm create --azure-rm-service-principal-id $backend_SPNAppID --azure-rm-subscription-id $backend_SUBid --azure-rm-subscription-name $backend_SUBName --azure-rm-tenant-id $backend_TNTid --name $backend_AZDOSrvConnName --org $backend_org --project $backend_project
@@ -132,21 +136,19 @@ Start-Sleep -Seconds 5
 
 Write-Host "Linking the Key Vault reference to the variable group..." -ForegroundColor Yellow
 
-# Fetch the secrets from Azure Key Vault and create variables in the variable group
-$secrets = az keyvault secret list --vault-name $backend_kv --query "[].{name:name, value:attributes.secretValue}" -o json | ConvertFrom-Json
-
-foreach ($secret in $secrets) {
-    $name = $secret.name
-    $value = $secret.value
-
+az keyvault secret list --vault-name $backend_kv --query "[].{name:name, value:attributes.secretValue}" -o json | ConvertFrom-Json | ForEach-Object {
+    $name = $_.name
+    $value = $_.value
     az pipelines variable-group variable create --group-id $backend_VBGroupID --name $name --value $value --secret true
 }
 
 Write-Host "Creating pipeline for tfazlab project..." -ForegroundColor Yellow
-az pipelines create --name 'TFazInfraPipe' --description 'Pipeline for tfazlab project' --repository https://dev.azure.com/tfazlab/_git/tfazlab --branch main --yml-path tfazbuild.yml --service-connection $backend_AZDOSrvConnName
+az pipelines create --name 'TFazInfraPipe' --description 'Pipeline for tfazlab project' --detect false --repository $backend_RepoName --branch main --yml-path tfazbuild.yml --repository-type tfsgit --skip-first-run true
 
+Write-Host "Allowing AZDO ACCESS..." -ForegroundColor Yellow
 # Grant Access to all Pipelines to the Newly Created DevOps Service Connection
+
 $backend_EndPid = az devops service-endpoint list --query "[?name=='$backend_AZDOSrvConnName'].id" -o tsv
-az devops service-endpoint update --id $backend_EndPid --enable-for-all true
+az devops service-endpoint update --detect false --id $backend_EndPid --enable-for-all true --verbose
 
 Write-Host "Done!" -ForegroundColor Green
