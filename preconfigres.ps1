@@ -35,7 +35,7 @@ $description = "backendVB"
 $backend_AZDOSrvConnName = "azdo-tfaz-conn"
 
 Write-Host "Creating service principal..." -ForegroundColor Yellow
-$backend_SPNPass = $(az ad sp create-for-rbac --name $backend_spn --role $backend_spn_role -scopes /subscriptions/64208b73-267b-43b1-9bb1-649f128147e6 --query 'password' -o tsv)
+$backend_SPNPass = $(az ad sp create-for-rbac --name $backend_spn --role $backend_spn_role --scopes /subscriptions/64208b73-267b-43b1-9bb1-649f128147e6 --query 'password' -o tsv)
 
 Start-Sleep -Seconds 2
 
