@@ -9,12 +9,12 @@ $backend_location = "norwayeast"
 $backendAzureRmKey = "terraform.tfstate"
 
 # Key Vault variables
-$backend_kv = "bcknd-tfaz-sec-kv"
+$backend_kv = "backend-sc-kv-tf"
 
 # Key Vault Secret Names
 $backend_AZDOSrvConnName_kv_sc = "AZDOName"
 $backend_RGName_kv_sc = "RGName"
-$backend_STGPass_Name_kv_sc = "STGName"
+$backend_STGName_kv_sc = "STGName"
 $backend_ContName_kv_sc = "ContName"
 $backendAzureRmKey_kv_sc = "TFStatefileName"
 $backend_SUBid_Name_kv_sc = "SUBidName"
@@ -31,10 +31,14 @@ $backend_VBGroup = "hawaVB"
 $description = "backendVB"
 
 # Azure DevOps Connection variables
-$backend_AZDOSrvConnName = "azdo-tfaz-conn"
+$backend_AZDOSrvConnName = 'azdo-tfaz-conn'
 
-# Repository name
+# Repository variables
 $backend_RepoName = "tfazlab"
+
+# Pipeline variables
+$backend_PipeName = "TFazInfraPipe"
+$backend_PipeDesc = "Pipeline for tfazlab project"
 
 Write-Host "Creating service principal..." -ForegroundColor Yellow
 $backend_SPNPass = $(az ad sp create-for-rbac --name $backend_spn --role $backend_spn_role --scopes /subscriptions/64208b73-267b-43b1-9bb1-649f128147e6 --query 'password' -o tsv)
@@ -109,13 +113,17 @@ Write-Host "Adding the Storage Account Access Key to Key Vault..." -ForegroundCo
 az keyvault secret set --vault-name $backend_kv --name $backend_STGPass_Name_kv_sc --value $backend_STGPass
 Start-Sleep -Seconds 2
 
+Write-Host "Adding the Storage Account Access Key to Key Vault..." -ForegroundColor Yellow
+az keyvault secret set --vault-name $backend_kv --name $backend_STGName_kv_sc --value $backend_stg
+Start-Sleep -Seconds 2
+
 Write-Host "Setting SPN secret..." -ForegroundColor Yellow
 az keyvault secret set --vault-name $backend_kv --name $backend_SPNPass_Name_kv_sc --value $backend_SPNPass
 Start-Sleep -Seconds 2
 
 ################################################################################
 
-# Set Default DevOps Organisation and Project
+# Set Default DevOps Organisation and Project # [$env:AZURE_DEVOPS_EXT_PAT]
 az devops configure --defaults organization=$backend_org
 az devops configure --defaults project=$backend_project
 
@@ -135,10 +143,10 @@ az pipelines variable-group update --id $backend_VBGroupID --org $backend_org --
 
 Start-Sleep -Seconds 5
 
-Write-Host "Linking the Key Vault secrets to the variable group..." -ForegroundColor Yellow
+#Write-Host "Linking the Key Vault secrets to the variable group..." -ForegroundColor Yellow
 
 Write-Host "Creating pipeline for tfazlab project..." -ForegroundColor Yellow
-az pipelines create --name 'TFazInfraPipe' --description 'Pipeline for tfazlab project' --detect false --repository $backend_RepoName --branch main --yml-path tfazbuild.yml --repository-type tfsgit --skip-first-run true
+az pipelines create --name $backend_PipeName --description $backend_PipeDesc --detect false --repository $backend_RepoName --branch main --yml-path tfazbuild.yml --repository-type tfsgit --skip-first-run true
 
 Start-Sleep -Seconds 10
 
