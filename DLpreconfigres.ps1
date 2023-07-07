@@ -1,20 +1,13 @@
 # Set the resource variables
 $backend_spn = "tfazinfra"
-$backend_spn_role = "Contributor"
 $backend_rg = "backend-tf-rg"
-$backend_stg = "backendstgtf"
-$backend_stg_sku = "Standard_LRS"
-$backend_cont = "backendcont"
-$backend_location = "norwayeast"
-$backendAzureRmKey = "terraform.tfstate"
-
+#$backend_pat = "ww7hj2c25xypj4m6oqc5u5qhzehabll5frjhpu43qus7rql3dfeq"
 # Set the Azure DevOps organization and project details
 $backend_org = "https://dev.azure.com/tfazlab"
 $backend_project = "tfazlab"
 
 # Set the variable group details
 $backend_VBGroup = "hawaVB"
-$description = "backendVB"
 
 # Azure DevOps Connection variables
 $backend_AZDOSrvConnName = "azdo-tfaz-conn"
@@ -25,7 +18,6 @@ $backend_project = "tfazlab"
 $backend_AZDOSrvConnName = "azdo-tfaz-conn"
 $backend_VBGroup = "hawaVB"
 $backend_PipeName = "TFazInfraPipe"
-$backend_PipeDesc = "Pipeline for tfazlab project"
 
 
 # Delete Resource Group
@@ -41,6 +33,12 @@ $backend_appId = $(az ad sp list --display-name $backend_spn --query '[0].appId'
 Write-Host "Deleting Azure AD application..." -ForegroundColor Yellow
 az ad app delete --id $backend_appId
 Write-Host "Azure AD application deleted." -ForegroundColor Green
+
+#Set Service Principal Secret as an Environment Variable for creating Azure DevOps Service Connection:-
+#$env:AZURE_DEVOPS_EXT_AZURE_RM_SERVICE_PRINCIPAL_KEY=$backend_appId
+
+# Set PAT as an environment variable for DevOps Login:-
+#$env:AZURE_DEVOPS_EXT_PAT = $backend_pat
 
 # Delete Azure DevOps resources
 Write-Host "Deleting Azure DevOps resources..." -ForegroundColor Yellow
