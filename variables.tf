@@ -38,33 +38,32 @@ variable "tfaz-stg-cont" {
 }
 
 ###############################################################
-# Key Vault
+# Key Vault | Secrets
 ###############################################################
 
-variable "tfaz-kv" {
+variable "kv-name-rndm" {
   type    = string
-  default = "tfaz-infra-kv"
+  default = "tfaz-kv"
 }
-
 
 variable "kv-sc-dc01-admin-label" {
   type    = string
-  default = "VMadminName"
+  default = "VMadminNameDC01"
 }
 
 variable "kv-sc-dc01-adminuser" {
   type    = string
-  default = "tfazdc01admin"
+  default = "dc01admin"
 }
 
-variable "kv-sc-dc01-admin-pass" {
+variable "kv-sc-dc01-admin-pass-label" {
   type    = string
-  default = "tfazdc01admin-pass"
+  default = "AdminPassDC01"
 }
 
-variable "tfaz-dc01-admin" {
+variable "tfaz-dc01-admin_upn" {
   type    = string
-  default = "tfazadminuser@hemensarzalihotmail.onmicrosoft.com"
+  default = "dc01admin@hemensarzalihotmail.onmicrosoft.com"
 }
 
 #variable "tfaz-keyvault-label" {
@@ -123,7 +122,7 @@ variable "tfaz-vnet2-label" {
 
 variable "tfaz-vnet2-subnet1-addr-space" {
   type    = string
-  default = "10.10.0.0/16"
+  default = "10.11.0.0/16"
 }
 
 variable "tfaz-vnet2-subnet1-range" {
@@ -180,7 +179,7 @@ variable "tfaz-ipconfig" {
 
 variable "tfaz-netwint-priv-ip-dc01" {
   type    = string
-  default = "10.10.1.101/24"
+  default = "10.10.1.101"
 }
 
 ###############################################################
@@ -202,7 +201,7 @@ variable "tfaz-netwint-priv-ip-dc01" {
 
 variable "dc01-label" {
   description = "The name given to the vm"
-  default     = "tfaz-infra-dc01-srv01"
+  default     = "tfaz-infra-dc01"
 }
 
 variable "storage_account_type" {
@@ -258,8 +257,13 @@ variable "sec-rule-allow-rdp-client" {
 }
 
 ###############################################################
-# 
+# SPN Variables
 ###############################################################
+
+variable "RoleAssinSPN" {
+  type    = string
+  default = "RoAssign-AllowSPNACreateADUser"
+}
 
 ###############################################################
 # 

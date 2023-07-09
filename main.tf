@@ -27,8 +27,13 @@ resource "azurerm_storage_container" "tfaz-cont" {
 
 ############ KeyVault ############
 
+resource "random_id" "tfaz-key-vault" {
+  byte_length = 4
+  prefix      = var.kv-name-rndm
+}
+
 resource "azurerm_key_vault" "tfaz-kv" {
-  name                = var.tfaz-kv
+  name                = random_id.tfaz-key-vault.hex
   location            = var.location
   resource_group_name = azurerm_resource_group.tfaz-rg.name
   tenant_id           = data.azurerm_client_config.current.tenant_id
@@ -45,27 +50,51 @@ resource "azurerm_key_vault" "tfaz-kv" {
     object_id = data.azurerm_client_config.current.object_id
     tenant_id = data.azurerm_client_config.current.tenant_id
 
-
-    key_permissions     = ["Get", "List", "Recover", "Delete", "Purge", "Recover"]
-    secret_permissions  = ["Get", "List", "Set", "Delete", "Purge", "Recover"]
-    storage_permissions = ["Get", "List", "Set", "Delete", "Purge", "Recover"]
+    key_permissions     = ["Get", "List", "Backup"]
+    secret_permissions  = ["Get", "List", "Set", "Delete", "Purge"]
+    storage_permissions = ["Get", "List", "Set"]
   }
+
+  #access_policy {
+  #tenant_id      = data.azuread_client_config.current.tenant_id
+  #object_id      = data.azuread_service_principal.retrieve_spn_Ids.object_id
+  #application_id = data.azuread_service_principal.retrieve_spn_Ids.application_id
+
+  #key_permissions     = ["Get", "List", "Set"]
+  #secret_permissions  = ["Get", "List", "Set"]
+  #storage_permissions = ["Get", "List", "Set"]
+
+  #}
+
 }
+
+#resource "azurerm_key_vault_access_policy" "AllowSPN" {
+#key_vault_id   = azurerm_key_vault.tfaz-kv.id
+#tenant_id      = data.azurerm_client_config.current.tenant_id
+#object_id      = data.azuread_service_principal.retrieve_spn_Ids.object_id
+#application_id = data.azuread_service_principal.retrieve_spn_Ids.application_id
+
+#secret_permissions = ["Get", "List", "Set"]
+#}
 
 ############ KV Secrets ############
 
-resource "azurerm_key_vault_secret" "tfaz-vm-admin-kv-sc" {
+resource "azurerm_key_vault_secret" "kv-sc-tfaz-vmadmin" {
   name         = var.kv-sc-dc01-admin-label
   value        = var.kv-sc-dc01-adminuser
   key_vault_id = azurerm_key_vault.tfaz-kv.id
-  depends_on   = [azurerm_key_vault.tfaz-kv]
+  depends_on = [
+    azurerm_key_vault.tfaz-kv
+  ]
 }
 
-resource "azurerm_key_vault_secret" "tfaz-vmadmin-pass-kv-sc" {
-  name         = var.kv-sc-dc01-admin-pass
+resource "azurerm_key_vault_secret" "kv-sc-tfaz-vm-pass" {
+  name         = var.kv-sc-dc01-admin-pass-label
   value        = random_password.vm-admin-pass.result
   key_vault_id = azurerm_key_vault.tfaz-kv.id
-  depends_on   = [azurerm_key_vault.tfaz-kv]
+  depends_on = [
+    azurerm_key_vault.tfaz-kv
+  ]
 }
 
 ############ Admin User ############
@@ -79,8 +108,8 @@ resource "random_password" "vm-admin-pass" {
 }
 
 resource "azuread_user" "tfaz-dc01-admin" {
-  user_principal_name = var.tfaz-dc01-admin
-  display_name        = var.kv-sc-dc01-admin-label
+  user_principal_name = var.tfaz-dc01-admin_upn
+  display_name        = azurerm_key_vault_secret.kv-sc-tfaz-vmadmin.value
   password            = random_password.vm-admin-pass.result
 }
 
@@ -93,7 +122,14 @@ resource "azurerm_virtual_network" "tfaz-vnet1" {
   address_space       = [var.tfaz-vnet1-subnet1-addr-space]
 }
 
-############ Virtual Network Subnet1 ############
+resource "azurerm_virtual_network" "tfaz-vnet2" {
+  name                = var.tfaz-vnet2-label
+  location            = var.location
+  resource_group_name = azurerm_resource_group.tfaz-rg.name
+  address_space       = [var.tfaz-vnet2-subnet1-addr-space]
+}
+
+############ Virtual Network: Subnet1 ############
 
 resource "azurerm_subnet" "tfaz-vnet1-subnet1" {
   name                 = var.tfaz-vnet1-label
@@ -105,9 +141,9 @@ resource "azurerm_subnet" "tfaz-vnet1-subnet1" {
 ############ Virtual Network Subnet2 ############
 
 resource "azurerm_subnet" "tfaz-vnet2-subn1" {
-  name                 = var.tfaz-vnet1-subnet1-label
+  name                 = var.tfaz-vnet2-subnet1-label
   resource_group_name  = azurerm_resource_group.tfaz-rg.name
-  virtual_network_name = azurerm_virtual_network.tfaz-vnet1.name
+  virtual_network_name = azurerm_virtual_network.tfaz-vnet2.name
   address_prefixes     = [var.tfaz-vnet2-subnet1-range]
 }
 
@@ -134,13 +170,15 @@ resource "azurerm_network_interface" "tfaz-netint-dc01" {
 ############ Virtual Machine ############
 
 resource "azurerm_windows_virtual_machine" "tfaz-vm-dco1" {
-  name                  = var.dc01-label
-  resource_group_name   = azurerm_resource_group.tfaz-rg.name
-  location              = azurerm_resource_group.tfaz-rg.location
-  size                  = var.vm_size
-  admin_username        = data.azuread_user.tfaz-dc01-admin.user_principal_name
-  admin_password        = random_password.vm-admin-pass.result
-  network_interface_ids = [azurerm_network_interface.tfaz-netint-dc01.id]
+  name                = var.dc01-label
+  resource_group_name = azurerm_resource_group.tfaz-rg.name
+  location            = azurerm_resource_group.tfaz-rg.location
+  size                = var.vm_size
+  admin_username      = azurerm_key_vault_secret.kv-sc-tfaz-vmadmin.value
+  admin_password      = random_password.vm-admin-pass.result
+  network_interface_ids = [
+    azurerm_network_interface.tfaz-netint-dc01.id
+  ]
 
   os_disk {
     caching              = "ReadWrite"

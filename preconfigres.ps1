@@ -9,7 +9,7 @@ $backend_location = "norwayeast"
 $backendAzureRmKey = "terraform.tfstate"
 
 # Key Vault variables
-$backend_kv = "backend-sc-kv-tf"
+$backend_kv = "backend-tfazdo-kv"
 
 # Key Vault Secret Names
 $backend_AZDOSrvConnName_kv_sc = "AZDOName"
@@ -40,13 +40,22 @@ $backend_RepoName = "tfazlab"
 $backend_PipeName = "TFazInfraPipe"
 $backend_PipeDesc = "Pipeline for tfazlab project"
 
+Write-Host "Retrieving AZ IDs" -ForegroundColor Green
+# Retrieve AZ IDs
+$backend_SUBid = $(az account show --query 'id' -o tsv)
+$backend_SUBName = $(az account show --query 'name' -o tsv)
+$backend_TNTid = $(az account show --query 'tenantId' -o tsv)
+
+Start-Sleep 3
+
 Write-Host "Creating service principal..." -ForegroundColor Yellow
-$backend_SPNPass = $(az ad sp create-for-rbac --name $backend_spn --role $backend_spn_role --scopes /subscriptions/64208b73-267b-43b1-9bb1-649f128147e6 --query 'password' -o tsv)
+$backend_SPNPass = $(az ad sp create-for-rbac --name $backend_spn --role $backend_spn_role --scope /subscriptions/$backend_SUBid --query 'password' -o tsv)
 
 Start-Sleep -Seconds 2
 
 # Set the SPN password as an environment variable: used by the Azdo Service Connection
 $env:AZURE_DEVOPS_EXT_AZURE_RM_SERVICE_PRINCIPAL_KEY=$backend_SPNPass
+#$env:AZURE_DEVOPS_EXT_PAT="ww7hj2c25xypj4m6oqc5u5qhzehabll5frjhpu43qus7rql3dfeq"
 
 Start-Sleep -Seconds 2
 
@@ -71,15 +80,14 @@ az keyvault create --resource-group $backend_rg --name $backend_kv --location $b
 Start-Sleep -Seconds 2
 
 Write-Host "Allowing the Service Principal Access to Key Vault..." -ForegroundColor Yellow
-$backend_SPNAppID = $(az ad sp list --display-name $backend_spn --query '[0].appId' -o tsv)
-$backend_SPNid = $(az ad sp show --id $backend_SPNAppID --query id -o tsv)
-az keyvault set-policy --name $backend_kv --object-id $backend_SPNid --secret-permissions get list
+$backend_SPNappId = $(az ad sp list --display-name $backend_spn --query '[0].appId' -o tsv)
+$backend_SPNid = $(az ad sp show --id $backend_SPNappId --query id -o tsv)
 
-Start-Sleep -Seconds 2
+Start-Sleep -Seconds 5
 
-$backend_SUBid = $(az account show --query 'id' -o tsv)
-$backend_SUBName = $(az account show --query 'name' -o tsv)
-$backend_TNTid = $(az account show --query 'tenantId' -o tsv)
+az keyvault set-policy --name $backend_kv --object-id $backend_SPNid --secret-permissions get list set
+
+Start-Sleep -Seconds 5
 
 Write-Host "Setting Azure DevOps Service Connection Name secret..." -ForegroundColor Yellow
 az keyvault secret set --vault-name $backend_kv --name $backend_AZDOSrvConnName_kv_sc --value $backend_AZDOSrvConnName
@@ -123,13 +131,13 @@ Start-Sleep -Seconds 2
 
 ################################################################################
 
-# Set Default DevOps Organisation and Project # [$env:AZURE_DEVOPS_EXT_PAT]
+# Set Default DevOps Organisation and Project # [Run in cli or add to script: $env:AZURE_DEVOPS_EXT_PAT]
 az devops configure --defaults organization=$backend_org
 az devops configure --defaults project=$backend_project
 
 Write-Host "Creating Azure DevOps service endpoint..." -ForegroundColor Yellow
 # Create DevOps Service Connection
-az devops service-endpoint azurerm create --azure-rm-service-principal-id $backend_SPNAppID --azure-rm-subscription-id $backend_SUBid --azure-rm-subscription-name $backend_SUBName --azure-rm-tenant-id $backend_TNTid --name $backend_AZDOSrvConnName --org $backend_org --project $backend_project
+az devops service-endpoint azurerm create --azure-rm-service-principal-id $backend_SPNappId --azure-rm-subscription-id $backend_SUBid --azure-rm-subscription-name $backend_SUBName --azure-rm-tenant-id $backend_TNTid --name $backend_AZDOSrvConnName --org $backend_org --project $backend_project
 
 Start-Sleep -Seconds 5
 
