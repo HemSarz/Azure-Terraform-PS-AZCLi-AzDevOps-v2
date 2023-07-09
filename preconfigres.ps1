@@ -85,7 +85,7 @@ $backend_SPNid = $(az ad sp show --id $backend_SPNappId --query id -o tsv)
 
 Start-Sleep -Seconds 5
 
-az keyvault set-policy --name $backend_kv --object-id $backend_SPNid --secret-permissions get list set
+az keyvault set-policy --name $backend_kv --object-id $backend_SPNid --secret-permissions get list set delete purge
 
 Start-Sleep -Seconds 5
 
