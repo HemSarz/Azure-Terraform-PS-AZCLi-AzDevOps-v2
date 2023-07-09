@@ -10,8 +10,8 @@ $backendAzureRmKey = "terraform.tfstate"
 
 # SPN | Permissions VB
 $MSGraphApi = "00000003-0000-0000-c000-000000000000" # MS Graph API Id
-$appDirRoleId = "19dbc75e-c2e2-444c-a770-ec69d8559fc7=Role" # Directory.ReadWrite.All
-$appUsrRoleId = "df021288-bdef-4463-88db-98f22de89214=Role" # User.Read.All
+$appDirRoleId = "19dbc75e-c2e2-444c-a770-ec69d8559fc7=Role" # Directory.ReadWrite.All | Not allowed to delete Users
+$appUsrRoleId = "df021288-bdef-4463-88db-98f22de89214=Role" # User.Read.All | Allowed to delete Users
 #$scope = "Directory.ReadWrite.All"
 
 # Key Vault variables
