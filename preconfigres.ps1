@@ -8,10 +8,11 @@ $backend_cont = "backendcont"
 $backend_location = "norwayeast"
 $backendAzureRmKey = "terraform.tfstate"
 
-# SPN | Oermissions VB
-$MSGraphApi = "00000003-0000-0000-c000-000000000000"
-$appRoleId = "19dbc75e-c2e2-444c-a770-ec69d8559fc7=Role"
-$scope = "Directory.ReadWrite.All"
+# SPN | Permissions VB
+$MSGraphApi = "00000003-0000-0000-c000-000000000000" # MS Graph API Id
+$appDirRoleId = "19dbc75e-c2e2-444c-a770-ec69d8559fc7=Role" # Directory.ReadWrite.All
+$appUsrRoleId = "df021288-bdef-4463-88db-98f22de89214=Role" # User.Read.All
+#$scope = "Directory.ReadWrite.All"
 
 # Key Vault variables
 $backend_kv = "backend-tfazdo-kv"
@@ -91,14 +92,21 @@ Start-Sleep -Seconds 5
 az keyvault set-policy --name $backend_kv --object-id $backend_SPNid --secret-permissions get list set delete purge
 
 Start-Sleep -Seconds 10
-Write-Host 'Assign permission...'
-az ad app permission add --id $backend_SPNappId --api $MSGraphApi --api-permissions $appRoleId
+
+$backend_SPNappId = $(az ad sp list --display-name "tfazinfra" --query '[0].appId' -o tsv)
+Start-Sleep -Seconds 5
+Write-Host 'Assign permission appDir...' -ForegroundColor Green
+az ad app permission add --id $backend_SPNappId --api $MSGraphApi --api-permissions $appDirRoleId
 Start-Sleep -Seconds 10
-Write-Host 'Add Permission grant..'
-az ad app permission grant --id $backend_SPNappId --api $MSGraphApi --scope $scope # Using scope adds permission to Type: "Delegated"
+Write-Host 'Assign permission appUsr...' -ForegroundColor Green
+az ad app permission add --id $backend_SPNappId --api $MSGraphApi --api-permissions $appUsrRoleId
 Start-Sleep -Seconds 10
-Write-host 'Add admin-consent'
-az ad app permission admin-consent --id $appId
+Write-Host 'Add Permission grant..' -ForegroundColor Green 
+# Ignore error "the following arguments are required: --scope" | 'scope' adds permission to Type: "Delegated"
+az ad app permission grant --id $backend_SPNappId --api $MSGraphApi #-scope $scope
+Start-Sleep -Seconds 10
+Write-host 'Add admin-consent' -ForegroundColor Green
+az ad app permission admin-consent --id $backend_SPNappId
 
 Write-Host "Setting Azure DevOps Service Connection Name secret..." -ForegroundColor Yellow
 az keyvault secret set --vault-name $backend_kv --name $backend_AZDOSrvConnName_kv_sc --value $backend_AZDOSrvConnName
