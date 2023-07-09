@@ -61,7 +61,7 @@ Start-Sleep -Seconds 5
 
 # Set the SPN password as an environment variable: used by the Azdo Service Connection
 $env:AZURE_DEVOPS_EXT_AZURE_RM_SERVICE_PRINCIPAL_KEY=$backend_SPNPass
-#$env:AZURE_DEVOPS_EXT_PAT="ww7hj2c25xypj4m6oqc5u5qhzehabll5frjhpu43qus7rql3dfeq"
+#$env:AZURE_DEVOPS_EXT_PAT="Your PAT"
 
 Start-Sleep -Seconds 5
 
