@@ -8,6 +8,11 @@ $backend_cont = "backendcont"
 $backend_location = "norwayeast"
 $backendAzureRmKey = "terraform.tfstate"
 
+# SPN | Oermissions VB
+$MSGraphApi = "00000003-0000-0000-c000-000000000000"
+$appRoleId = "19dbc75e-c2e2-444c-a770-ec69d8559fc7=Role"
+$scope = "Directory.ReadWrite.All"
+
 # Key Vault variables
 $backend_kv = "backend-tfazdo-kv"
 
@@ -51,13 +56,13 @@ Start-Sleep 3
 Write-Host "Creating service principal..." -ForegroundColor Yellow
 $backend_SPNPass = $(az ad sp create-for-rbac --name $backend_spn --role $backend_spn_role --scope /subscriptions/$backend_SUBid --query 'password' -o tsv)
 
-Start-Sleep -Seconds 2
+Start-Sleep -Seconds 5
 
 # Set the SPN password as an environment variable: used by the Azdo Service Connection
 $env:AZURE_DEVOPS_EXT_AZURE_RM_SERVICE_PRINCIPAL_KEY=$backend_SPNPass
 #$env:AZURE_DEVOPS_EXT_PAT="ww7hj2c25xypj4m6oqc5u5qhzehabll5frjhpu43qus7rql3dfeq"
 
-Start-Sleep -Seconds 2
+Start-Sleep -Seconds 5
 
 Write-Host "Creating resource group..." -ForegroundColor Yellow
 az group create --name $backend_rg --location $backend_location
@@ -67,7 +72,7 @@ az storage account create --resource-group $backend_rg --name $backend_stg --sku
 
 $backend_STGPass = $(az storage account keys list --resource-group $backend_rg --account-name $backend_stg --query "[0].value" -o tsv)
 
-Start-Sleep -Seconds 2
+Start-Sleep -Seconds 5
 
 Write-Host "Creating storage container..." -ForegroundColor Yellow
 az storage container create --name $backend_cont --account-name $backend_stg --account-key $backend_STGPass
@@ -77,57 +82,63 @@ Start-Sleep -Seconds 5
 Write-Host "Creating the Key Vault..." -ForegroundColor Yellow
 az keyvault create --resource-group $backend_rg --name $backend_kv --location $backend_location
 
-Start-Sleep -Seconds 2
+Start-Sleep -Seconds 5
 
 Write-Host "Allowing the Service Principal Access to Key Vault..." -ForegroundColor Yellow
 $backend_SPNappId = $(az ad sp list --display-name $backend_spn --query '[0].appId' -o tsv)
 $backend_SPNid = $(az ad sp show --id $backend_SPNappId --query id -o tsv)
-
 Start-Sleep -Seconds 5
-
 az keyvault set-policy --name $backend_kv --object-id $backend_SPNid --secret-permissions get list set delete purge
 
-Start-Sleep -Seconds 5
+Start-Sleep -Seconds 10
+Write-Host 'Assign permission...'
+az ad app permission add --id $backend_SPNappId --api $MSGraphApi --api-permissions $appRoleId
+Start-Sleep -Seconds 10
+Write-Host 'Add Permission grant..'
+az ad app permission grant --id $backend_SPNappId --api $MSGraphApi --scope $scope # Using scope adds permission to Type: "Delegated"
+Start-Sleep -Seconds 10
+Write-host 'Add admin-consent'
+az ad app permission admin-consent --id $appId
 
 Write-Host "Setting Azure DevOps Service Connection Name secret..." -ForegroundColor Yellow
 az keyvault secret set --vault-name $backend_kv --name $backend_AZDOSrvConnName_kv_sc --value $backend_AZDOSrvConnName
-Start-Sleep -Seconds 2
+Start-Sleep -Seconds 5
 
 Write-Host "Setting Resource Group Name secret..." -ForegroundColor Yellow
 az keyvault secret set --vault-name $backend_kv --name $backend_RGName_kv_sc --value $backend_rg
-Start-Sleep -Seconds 2
+Start-Sleep -Seconds 5
 
 Write-Host "Setting Storage Account Password secret..." -ForegroundColor Yellow
 az keyvault secret set --vault-name $backend_kv --name $backend_STGPass_Name_kv_sc --value $backend_stg
-Start-Sleep -Seconds 2
+Start-Sleep -Seconds 5
 
 Write-Host "Setting Container Name secret..." -ForegroundColor Yellow
 az keyvault secret set --vault-name $backend_kv --name $backend_ContName_kv_sc --value $backend_cont
-Start-Sleep -Seconds 2
+Start-Sleep -Seconds 5
 
 Write-Host "Setting Azure Resource Manager Key secret..." -ForegroundColor Yellow
 az keyvault secret set --vault-name $backend_kv --name $backendAzureRmKey_kv_sc --value $backendAzureRmKey
-Start-Sleep -Seconds 2
+Start-Sleep -Seconds 5
 
 Write-Host "Setting Subscription ID secret..." -ForegroundColor Yellow
 az keyvault secret set --vault-name $backend_kv --name $backend_SUBid_Name_kv_sc --value $backend_SUBid
-Start-Sleep -Seconds 2
+Start-Sleep -Seconds 5
 
 Write-Host "Setting Tenant ID secret..." -ForegroundColor Yellow
 az keyvault secret set --vault-name $backend_kv --name $backend_TNTid_Name_kv_sc --value $backend_TNTid
-Start-Sleep -Seconds 2
+Start-Sleep -Seconds 5
 
 Write-Host "Adding the Storage Account Access Key to Key Vault..." -ForegroundColor Yellow
 az keyvault secret set --vault-name $backend_kv --name $backend_STGPass_Name_kv_sc --value $backend_STGPass
-Start-Sleep -Seconds 2
+Start-Sleep -Seconds 5
 
 Write-Host "Adding the Storage Account Access Key to Key Vault..." -ForegroundColor Yellow
 az keyvault secret set --vault-name $backend_kv --name $backend_STGName_kv_sc --value $backend_stg
-Start-Sleep -Seconds 2
+Start-Sleep -Seconds 5
 
 Write-Host "Setting SPN secret..." -ForegroundColor Yellow
 az keyvault secret set --vault-name $backend_kv --name $backend_SPNPass_Name_kv_sc --value $backend_SPNPass
-Start-Sleep -Seconds 2
+Start-Sleep -Seconds 5
 
 ################################################################################
 

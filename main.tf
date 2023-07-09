@@ -55,27 +55,7 @@ resource "azurerm_key_vault" "tfaz-kv" {
     storage_permissions = ["Get", "List", "Set"]
   }
 
-  #access_policy {
-  #tenant_id      = data.azuread_client_config.current.tenant_id
-  #object_id      = data.azuread_service_principal.retrieve_spn_Ids.object_id
-  #application_id = data.azuread_service_principal.retrieve_spn_Ids.application_id
-
-  #key_permissions     = ["Get", "List", "Set"]
-  #secret_permissions  = ["Get", "List", "Set"]
-  #storage_permissions = ["Get", "List", "Set"]
-
-  #}
-
 }
-
-#resource "azurerm_key_vault_access_policy" "AllowSPN" {
-#key_vault_id   = azurerm_key_vault.tfaz-kv.id
-#tenant_id      = data.azurerm_client_config.current.tenant_id
-#object_id      = data.azuread_service_principal.retrieve_spn_Ids.object_id
-#application_id = data.azuread_service_principal.retrieve_spn_Ids.application_id
-
-#secret_permissions = ["Get", "List", "Set"]
-#}
 
 ############ KV Secrets ############
 
