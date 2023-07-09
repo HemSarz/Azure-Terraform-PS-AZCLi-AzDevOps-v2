@@ -63,7 +63,7 @@ variable "kv-sc-dc01-admin-pass-label" {
 
 variable "tfaz-dc01-admin_upn" {
   type    = string
-  default = "dc01admin@hemensarzalihotmail.onmicrosoft.com"
+  default = "dc01admin@yourdomain"
 }
 
 #variable "tfaz-keyvault-label" {
