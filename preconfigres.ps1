@@ -86,12 +86,17 @@ az keyvault create --resource-group $backend_rg --name $backend_kv --location $b
 Start-Sleep -Seconds 5
 
 Write-Host "Allowing the Service Principal Access to Key Vault..." -ForegroundColor Yellow
+
 $backend_SPNappId = $(az ad sp list --display-name $backend_spn --query '[0].appId' -o tsv)
 $backend_SPNid = $(az ad sp show --id $backend_SPNappId --query id -o tsv)
+
 Start-Sleep -Seconds 5
+
 az keyvault set-policy --name $backend_kv --object-id $backend_SPNid --secret-permissions get list set delete purge
 
 Start-Sleep -Seconds 10
+
+Write-Host "Assign SPN AD Permissions..." -ForegroundColor Yellow
 
 $backend_SPNappId = $(az ad sp list --display-name "tfazinfra" --query '[0].appId' -o tsv)
 Start-Sleep -Seconds 5
@@ -150,7 +155,7 @@ Start-Sleep -Seconds 5
 
 ################################################################################
 
-# Set Default DevOps Organisation and Project # [Run in cli or add to script: $env:AZURE_DEVOPS_EXT_PAT]
+# Set Default DevOps Organisation and Project # [$env:AZURE_DEVOPS_EXT_PAT = Run in cli or add to script]
 az devops configure --defaults organization=$backend_org
 az devops configure --defaults project=$backend_project
 
