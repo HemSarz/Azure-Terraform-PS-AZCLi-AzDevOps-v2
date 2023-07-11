@@ -45,6 +45,8 @@ $backend_RepoName = "tfazlab"
 # Pipeline variables
 $backend_PipeName = "TFazInfraPipe"
 $backend_PipeDesc = "Pipeline for tfazlab project"
+$backend_PipeBuild_Name = "TFaz-Build-Pipe"
+$backend_PipeDest_Name = "Tfaz-Destroy-Pipe"
 $backend_tfdest_yml = "tf_destroy.yml"
 $backend_tfaz_build_yml = "tfazbuild.yml"
 
@@ -180,12 +182,12 @@ Start-Sleep -Seconds 5
 #Write-Host "Linking the Key Vault secrets to the variable group..." -ForegroundColor Yellow
 
 Write-Host "Creating pipeline for tfazlab project..." -ForegroundColor Yellow
-az pipelines create --name $backend_PipeName --description $backend_PipeDesc --detect false --repository $backend_RepoName --branch main --yml-path tfazbuild.yml --repository-type tfsgit --skip-first-run true
+az pipelines create --name $backend_PipeBuild_Name --description $backend_PipeDesc --detect false --repository $backend_RepoName --branch main --yml-path $backend_tfaz_build_yml --repository-type tfsgit --skip-first-run true
 
 Start-Sleep -Seconds 10
 
 Write-Host "Create TF Destroy pipeline for tfazlab project" -ForegroundColor Yellow
-az pipelines create --name $backend_PipeName --description $backend_PipeDesc --detect false --repository $backend_RepoName --branch main --yml-path $backend_tfdest_yml --repository-type tfsgit --skip-first-run true
+az pipelines create --name $backend_PipeDest_Name --description $backend_PipeDesc --detect false --repository $backend_RepoName --branch main --yml-path $backend_tfdest_yml --repository-type tfsgit --skip-first-run true
 
 Start-Sleep -Seconds 10
 
