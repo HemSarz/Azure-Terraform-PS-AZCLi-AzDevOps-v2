@@ -15,7 +15,7 @@ $appUsrRoleId = "df021288-bdef-4463-88db-98f22de89214=Role" # User.Read.All | Al
 #$scope = "Directory.ReadWrite.All"
 
 # Key Vault variables
-$backend_kv = "backend-tfazdo-kv"
+$backend_kv = "backend-tfazdo-kv-sc"
 
 # Key Vault Secret Names
 $backend_AZDOSrvConnName_kv_sc = "AZDOName"
@@ -47,8 +47,10 @@ $backend_PipeName = "TFazInfraPipe"
 $backend_PipeDesc = "Pipeline for tfazlab project"
 $backend_PipeBuild_Name = "TFaz-Build-Pipe"
 $backend_PipeDest_Name = "Tfaz-Destroy-Pipe"
-$backend_tfdest_yml = "tf_destroy.yml"
+$backend_tfdest_yml = "tfaz_destroy.yml"
 $backend_tfaz_build_yml = "tfazbuild.yml"
+
+# ]
 
 Write-Host "Retrieving AZ IDs" -ForegroundColor Green
 # Retrieve AZ IDs
@@ -56,7 +58,11 @@ $backend_SUBid = $(az account show --query 'id' -o tsv)
 $backend_SUBName = $(az account show --query 'name' -o tsv)
 $backend_TNTid = $(az account show --query 'tenantId' -o tsv)
 
-Start-Sleep 3
+# ]
+
+Start-Sleep -Seconds 5
+
+# [
 
 Write-Host "Creating service principal..." -ForegroundColor Yellow
 $backend_SPNPass = $(az ad sp create-for-rbac --name $backend_spn --role $backend_spn_role --scope /subscriptions/$backend_SUBid --query 'password' -o tsv)
@@ -100,22 +106,30 @@ az keyvault set-policy --name $backend_kv --object-id $backend_SPNid --secret-pe
 
 Start-Sleep -Seconds 10
 
+# [
+
 Write-Host "Assign SPN AD Permissions..." -ForegroundColor Yellow
 
 $backend_SPNappId = $(az ad sp list --display-name "tfazinfra" --query '[0].appId' -o tsv)
-Start-Sleep -Seconds 5
+Start-Sleep -Seconds 20
 Write-Host 'Assign permission appDir...' -ForegroundColor Green
 az ad app permission add --id $backend_SPNappId --api $MSGraphApi --api-permissions $appDirRoleId
-Start-Sleep -Seconds 10
+Start-Sleep -Seconds 20
 Write-Host 'Assign permission appUsr...' -ForegroundColor Green
 az ad app permission add --id $backend_SPNappId --api $MSGraphApi --api-permissions $appUsrRoleId
-Start-Sleep -Seconds 10
+Start-Sleep -Seconds 20
 Write-Host 'Add Permission grant..' -ForegroundColor Green 
 # Ignore error "the following arguments are required: --scope" | 'scope' adds permission to Type: "Delegated"
 az ad app permission grant --id $backend_SPNappId --api $MSGraphApi #-scope $scope
-Start-Sleep -Seconds 10
+Start-Sleep -Seconds 20
 Write-host 'Add admin-consent' -ForegroundColor Green
 az ad app permission admin-consent --id $backend_SPNappId
+
+# ]
+
+Start-Sleep -Seconds 5
+
+# [
 
 Write-Host "Setting Azure DevOps Service Connection Name secret..." -ForegroundColor Yellow
 az keyvault secret set --vault-name $backend_kv --name $backend_AZDOSrvConnName_kv_sc --value $backend_AZDOSrvConnName
@@ -157,17 +171,32 @@ Write-Host "Setting SPN secret..." -ForegroundColor Yellow
 az keyvault secret set --vault-name $backend_kv --name $backend_SPNPass_Name_kv_sc --value $backend_SPNPass
 Start-Sleep -Seconds 5
 
-################################################################################
+# ]
+
+Start-Sleep -Seconds 5
+
+# [
 
 # Set Default DevOps Organisation and Project # [$env:AZURE_DEVOPS_EXT_PAT = Run in cli or add to script]
 az devops configure --defaults organization=$backend_org
 az devops configure --defaults project=$backend_project
 
+# ]
+
+Start-Sleep -Seconds 5
+
+# [
+
 Write-Host "Creating Azure DevOps service endpoint..." -ForegroundColor Yellow
 # Create DevOps Service Connection
 az devops service-endpoint azurerm create --azure-rm-service-principal-id $backend_SPNappId --azure-rm-subscription-id $backend_SUBid --azure-rm-subscription-name $backend_SUBName --azure-rm-tenant-id $backend_TNTid --name $backend_AZDOSrvConnName --org $backend_org --project $backend_project
 
+# ]
+
 Start-Sleep -Seconds 5
+
+# [
+
 
 Write-Host "Creating the variable group..." -ForegroundColor Yellow
 az pipelines variable-group create --organization $backend_org --project $backend_project --name $backend_VBGroup --description $description --variables foo=bar --authorize true
@@ -177,9 +206,12 @@ $backend_VBGroupID = $(az pipelines variable-group list --organization $backend_
 # Update the variable group to link it to Authorize
 az pipelines variable-group update --id $backend_VBGroupID --org $backend_org --project $backend_project --authorize true
 
+
+# ]
+
 Start-Sleep -Seconds 5
 
-#Write-Host "Linking the Key Vault secrets to the variable group..." -ForegroundColor Yellow
+# [
 
 Write-Host "Creating pipeline for tfazlab project..." -ForegroundColor Yellow
 az pipelines create --name $backend_PipeBuild_Name --description $backend_PipeDesc --detect false --repository $backend_RepoName --branch main --yml-path $backend_tfaz_build_yml --repository-type tfsgit --skip-first-run true
@@ -189,11 +221,18 @@ Start-Sleep -Seconds 10
 Write-Host "Create TF Destroy pipeline for tfazlab project" -ForegroundColor Yellow
 az pipelines create --name $backend_PipeDest_Name --description $backend_PipeDesc --detect false --repository $backend_RepoName --branch main --yml-path $backend_tfdest_yml --repository-type tfsgit --skip-first-run true
 
+# ]
+
 Start-Sleep -Seconds 10
+
+# [
+
 
 Write-Host "Allowing AZDO ACCESS..." -ForegroundColor Yellow
 # Grant Access to all Pipelines to the Newly Created DevOps Service Connection
 $backend_EndPid = az devops service-endpoint list --query "[?name=='$backend_AZDOSrvConnName'].id" -o tsv
 az devops service-endpoint update --detect false --id $backend_EndPid --enable-for-all true
+
+# ]
 
 Write-Host "Done!" -ForegroundColor Green
