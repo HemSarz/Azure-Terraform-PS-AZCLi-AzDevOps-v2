@@ -17,7 +17,10 @@ $backend_org = "https://dev.azure.com/tfazlab"
 $backend_project = "tfazlab"
 $backend_AZDOSrvConnName = "azdo-tfaz-conn"
 $backend_VBGroup = "hawaVB"
-$backend_PipeName = "TFazInfraPipe"
+$backend_PipeBuild_Name = "TFaz-Build-Pipe"
+$backend_PipeDest_Name = "Tfaz-Destroy-Pipe"
+$backend_tfdest_yml = "tfaz_destroy.yml"
+$backend_tfaz_build_yml = "tfazbuild.yml"
 
 # Set the SPN password as an environment variable: used by the Azdo Service Connection
 $env:AZURE_DEVOPS_EXT_AZURE_RM_SERVICE_PRINCIPAL_KEY=$backend_SPNPass
@@ -56,8 +59,13 @@ Write-Host "Azure DevOps variable group deleted." -ForegroundColor Green
 
 # Delete Pipeline
 Write-Host "Retrieving Azure DevOps pipeline ID..." -ForegroundColor Yellow
-$backend_pipelineId = $(az pipelines show --org $backend_org --project $backend_project --name $backend_PipeName --query 'id' -o tsv)
+$backend_pipelineId = $(az pipelines show --org $backend_org --project $backend_project --name $backend_PipeBuild_Name --query 'id' -o tsv)
 az pipelines delete --id $backend_pipelineId --org $backend_org --project $backend_project --detect false --yes
+Write-Host "Azure DevOps pipeline deleted." -ForegroundColor Green
+
+Write-Host "Retrieving Azure DevOps pipeline ID..." -ForegroundColor Yellow
+$backend_pipelineId_dest_id = $(az pipelines show --org $backend_org --project $backend_project --name $backend_PipeDest_Name --query 'id' -o tsv)
+az pipelines delete --id $backend_pipelineId_dest_id --org $backend_org --project $backend_project --detect false --yes
 Write-Host "Azure DevOps pipeline deleted." -ForegroundColor Green
 
 Write-Host "Resource cleanup completed." -ForegroundColor Green
