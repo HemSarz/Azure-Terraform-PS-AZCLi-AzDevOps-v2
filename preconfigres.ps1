@@ -110,8 +110,6 @@ Start-Sleep -Seconds 10
 
 Write-Host "Assign SPN AD Permissions..." -ForegroundColor Yellow
 
-$backend_SPNappId = $(az ad sp list --display-name "tfazinfra" --query '[0].appId' -o tsv)
-Start-Sleep -Seconds 20
 Write-Host 'Assign permission appDir...' -ForegroundColor Green
 az ad app permission add --id $backend_SPNappId --api $MSGraphApi --api-permissions $appDirRoleId
 Start-Sleep -Seconds 20
