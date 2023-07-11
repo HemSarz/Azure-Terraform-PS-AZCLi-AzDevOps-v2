@@ -14,8 +14,10 @@ $appDirRoleId = "19dbc75e-c2e2-444c-a770-ec69d8559fc7=Role" # Directory.ReadWrit
 $appUsrRoleId = "df021288-bdef-4463-88db-98f22de89214=Role" # User.Read.All | Allowed to delete Users [Terraform Destroy]
 #$scope = "Directory.ReadWrite.All"
 
-# Key Vault variables
-$backend_kv = "backend-tfazdo-kv-sc"
+# Key Vault variables | Generate a random number between 1 and 999
+$randomNumber = Get-Random -Minimum 1 -Maximum 999
+# Create the backend_kv variable with a random name
+$backend_kv = "backend-tfaz-kv$('{0:D3}' -f $randomNumber)"
 
 # Key Vault Secret Names
 $backend_AZDOSrvConnName_kv_sc = "AZDOName"
