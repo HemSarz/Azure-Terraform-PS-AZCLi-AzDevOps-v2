@@ -29,6 +29,7 @@ $backend_SUBid_Name_kv_sc = "SUBidName"
 $backend_TNTid_Name_kv_sc = "TNTidName"
 $backend_STGPass_Name_kv_sc = "STGPass"
 $backend_SPNPass_Name_kv_sc = "SPNPass"
+$backend_SPNappId_Name_kv_sc = "SPNappId"
 
 # Set the Azure DevOps organization and project details
 $backend_org = "https://dev.azure.com/tfazlab"
@@ -187,6 +188,11 @@ Start-Sleep -Seconds 5
 
 Write-Host "Storing SPN Password in Key Vault..." -ForegroundColor Yellow
 az keyvault secret set --vault-name $backend_kv --name $backend_SPNPass_Name_kv_sc --value $backend_SPNPass
+
+Start-Sleep -Seconds 5
+
+Write-Host "Storing SPN appId..." -ForegroundColor Yellow
+az keyvault secret set --vault-name $backend_kv --name $backend_SPNappId_Name_kv_sc --value $backend_SPNappId
 
 # ]
 
