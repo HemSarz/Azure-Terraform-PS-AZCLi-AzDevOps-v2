@@ -4,7 +4,6 @@
 # .tfstate files
 *.tfstate
 *.tfstate.*
-*.terraform.lock.hcl*
 
 # Crash log files
 crash.log
@@ -33,7 +32,5 @@ tfplan
 
 # Exclude the text file that contains the Personal Access Token Keys
 keys.txt
-pat.txt
 AzureDevOps/keys.txt
 Networking\Deployments\Network-Deployment\CommandLineParams.txt
-
