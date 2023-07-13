@@ -300,7 +300,14 @@ az pipelines create \
 Start-Sleep -Seconds 10
 
 Write-Host "Allowing AZDO ACCESS..." -ForegroundColor Yellow
-$backend_EndPid = az devops service-endpoint list --query "[?name=='$backend_AZDOSrvConnName'].id" -o tsv
-az devops service-endpoint update --detect false --id $backend_EndPid --enable-for-all true
+$backend_EndPid \
+= az devops service-endpoint list \
+--query "[?name=='$backend_AZDOSrvConnName'].id" \
+-o tsv
+
+az devops service-endpoint update \
+--detect false \ 
+--id $backend_EndPid \
+--enable-for-all true \
 
 Write-Host "Done!" -ForegroundColor Green
