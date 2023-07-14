@@ -7,3 +7,6 @@ git commit -m "UpdateTFsv1"
 
 Write-Host "Executing: git push -u origin main --force"
 git push -u origin main --force
+
+Write-Host "Executing: git push -u origin main --force"
+git push -u tfaz main --force
