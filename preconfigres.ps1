@@ -46,7 +46,6 @@ $backend_AZDOSrvConnName = 'azdo-tfaz-conn'
 $backend_RepoName = "tfazlab"
 
 # Pipeline variables
-$backend_PipeName = "TFazInfraPipe"
 $backend_PipeDesc = "Pipeline for tfazlab project"
 $backend_PipeBuild_Name = "TFaz-Build-Pipe"
 $backend_PipeDest_Name = "Tfaz-Destroy-Pipe"
@@ -62,11 +61,11 @@ $backend_TNTid = $(az account show --query 'tenantId' -o tsv)
 Start-Sleep -Seconds 5
 
 Write-Host "Creating service principal..." -ForegroundColor Yellow
-$backend_SPNPass = $(az ad sp create-for-rbac \
---name $backend_spn \
---role $backend_spn_role \
---scope /subscriptions/$backend_SUBid \
---query 'password' -o tsv)
+$backend_SPNPass = $(az ad sp create-for-rbac `
+        --name $backend_spn `
+        --role $backend_spn_role `
+        --scope /subscriptions/$backend_SUBid `
+        --query 'password' -o tsv)
 
 Start-Sleep -Seconds 5
 
@@ -75,46 +74,54 @@ $env:AZURE_DEVOPS_EXT_AZURE_RM_SERVICE_PRINCIPAL_KEY = $backend_SPNPass
 Start-Sleep -Seconds 5
 
 Write-Host "Creating resource group..." -ForegroundColor Yellow
-az group create \
-    --name $backend_rg \
+az group create `
+    --name $backend_rg `
     --location $backend_location
 
 Write-Host "Creating storage account..." -ForegroundColor Yellow
-az storage account create \
-    --resource-group $backend_rg \
-    --name $backend_stg \
-    --sku $backend_stg_sku \
+az storage account create `
+    --resource-group $backend_rg `
+    --name $backend_stg `
+    --sku $backend_stg_sku `
     --encryption-services blob
 
-$backend_STGPass = $(az storage account keys list --resource-group $backend_rg --account-name $backend_stg --query "[0].value" -o tsv)
+$backend_STGPass = $(az storage account keys list `
+        --resource-group $backend_rg `
+        --account-name $backend_stg `
+        --query "[0].value" -o tsv)
 
 Start-Sleep -Seconds 5
 
 Write-Host "Creating storage container..." -ForegroundColor Yellow
-az storage container create \
-    --name $backend_cont \
-    --account-name $backend_stg \
+az storage container create `
+    --name $backend_cont `
+    --account-name $backend_stg `
     --account-key $backend_STGPass
 
 Start-Sleep -Seconds 5
 
 Write-Host "Creating the Key Vault..." -ForegroundColor Yellow
-az keyvault create \
-    --resource-group $backend_rg \
-    --name $backend_kv \
+az keyvault create `
+    --resource-group $backend_rg `
+    --name $backend_kv `
     --location $backend_location
 
 Start-Sleep -Seconds 5
 
 Write-Host "Allowing the Service Principal Access in Key Vault..." -ForegroundColor Yellow
-$backend_SPNappId = $(az ad sp list --display-name $backend_spn --query '[0].appId' -o tsv)
-$backend_SPNid = $(az ad sp show --id $backend_SPNappId --query id -o tsv)
+$backend_SPNappId = $(az ad sp list `
+        --display-name $backend_spn `
+        --query '[0].appId' -o tsv)
+
+$backend_SPNid = $(az ad sp show `
+        --id $backend_SPNappId `
+        --query id -o tsv)
 
 Start-Sleep -Seconds 5
 
-az keyvault set-policy \
-    --name $backend_kv \
-    --object-id $backend_SPNid \
+az keyvault set-policy `
+    --name $backend_kv `
+    --object-id $backend_SPNid `
     --secret-permissions get list set delete purge
 
 Start-Sleep -Seconds 10
@@ -122,24 +129,24 @@ Start-Sleep -Seconds 10
 Write-Host "Assign SPN AD Permissions..." -ForegroundColor Yellow
 
 Write-Host 'Assign permission appDir...' -ForegroundColor Green
-az ad app permission add \
-    --id $backend_SPNappId \
-    --api $MSGraphApi \
+az ad app permission add `
+    --id $backend_SPNappId `
+    --api $MSGraphApi `
     --api-permissions $appDirRoleId
 
 Start-Sleep -Seconds 20
 
 Write-Host 'Assign permission appUsr...' -ForegroundColor Green
-az ad app permission add \
-    --id $backend_SPNappId \
-    --api $MSGraphApi \
+az ad app permission add `
+    --id $backend_SPNappId `
+    --api $MSGraphApi `
     --api-permissions $appUsrRoleId
 
 Start-Sleep -Seconds 20
 
 Write-Host 'Add Permission grant...' -ForegroundColor Green
-az ad app permission grant \
-    --id $backend_SPNappId \
+az ad app permission grant `
+    --id $backend_SPNappId `
     --api $MSGraphApi
 
 Start-Sleep -Seconds 20
@@ -150,89 +157,89 @@ az ad app permission admin-consent --id $backend_SPNappId
 Start-Sleep -Seconds 5
 
 Write-Host "Storing Azure DevOps Service Connection Name in Key Vault..." -ForegroundColor Yellow
-az keyvault secret set \
-    --vault-name $backend_kv \
-    --name $backend_AZDOSrvConnName_kv_sc \
+az keyvault secret set `
+    --vault-name $backend_kv `
+    --name $backend_AZDOSrvConnName_kv_sc `
     --value $backend_AZDOSrvConnName
 
 Start-Sleep -Seconds 5
 
 Write-Host "Storing Resource Group Name in Key Vault..." -ForegroundColor Yellow
-az keyvault secret set \
-    --vault-name $backend_kv \
-    --name $backend_RGName_kv_sc \
+az keyvault secret set `
+    --vault-name $backend_kv `
+    --name $backend_RGName_kv_sc `
     --value $backend_rg
 
 Start-Sleep -Seconds 5
 
 Write-Host "Storing Storage Account Password in Key Vault..." -ForegroundColor Yellow
-az keyvault secret set \
-    --vault-name $backend_kv \
-    --name $backend_STGPass_Name_kv_sc \
+az keyvault secret set `
+    --vault-name $backend_kv `
+    --name $backend_STGPass_Name_kv_sc `
     --value $backend_stg
 
 Start-Sleep -Seconds 5
 
 Write-Host "Storing Container Name in Key Vault..." -ForegroundColor Yellow
-az keyvault secret set \
-    --vault-name $backend_kv \
-    --name $backend_ContName_kv_sc \
+az keyvault secret set `
+    --vault-name $backend_kv `
+    --name $backend_ContName_kv_sc `
     --value $backend_cont
 
 Start-Sleep -Seconds 5
 
 Write-Host "Storing Azure Resource Manager Key in Key Vault..." -ForegroundColor Yellow
-az keyvault secret set \
-    --vault-name $backend_kv \
-    --name $backendAzureRmKey_kv_sc \
+az keyvault secret set `
+    --vault-name $backend_kv `
+    --name $backendAzureRmKey_kv_sc `
     --value $backendAzureRmKey
 
 Start-Sleep -Seconds 5
 
 Write-Host "Storing Subscription ID in Key Vault..." -ForegroundColor Yellow
-az keyvault secret set \
-    --vault-name $backend_kv \
-    --name $backend_SUBid_Name_kv_sc \
+az keyvault secret set `
+    --vault-name $backend_kv `
+    --name $backend_SUBid_Name_kv_sc `
     --value $backend_SUBid
 
 Start-Sleep -Seconds 5
 
 Write-Host "Storing Tenant ID in Key Vault..." -ForegroundColor Yellow
-az keyvault secret set \
-    --vault-name $backend_kv \
-    --name $backend_TNTid_Name_kv_sc \
+az keyvault secret set `
+    --vault-name $backend_kv `
+    --name $backend_TNTid_Name_kv_sc `
     --value $backend_TNTid
 
 Start-Sleep -Seconds 5
 
 Write-Host "Storing the Storage Account Access Key in Key Vault..." -ForegroundColor Yellow
-az keyvault secret set \
-    --vault-name $backend_kv \
-    --name $backend_STGPass_Name_kv_sc \
+az keyvault secret set `
+    --vault-name $backend_kv `
+    --name $backend_STGPass_Name_kv_sc `
     --value $backend_STGPass
 
 Start-Sleep -Seconds 5
 
 Write-Host "Storing the Storage Account Name in Key Vault..." -ForegroundColor Yellow
-az keyvault secret set \
-    --vault-name $backend_kv \
-    --name $backend_STGName_kv_sc \
+az keyvault secret set `
+    --vault-name $backend_kv `
+    --name $backend_STGName_kv_sc `
     --value $backend_stg
 
 Start-Sleep -Seconds 5
 
 Write-Host "Storing SPN Password in Key Vault..." -ForegroundColor Yellow
-az keyvault secret set \
-    --vault-name $backend_kv \
-    --name $backend_SPNPass_Name_kv_sc \
+az keyvault secret set `
+    --vault-name $backend_kv `
+    --name $backend_SPNPass_Name_kv_sc `
     --value $backend_SPNPass
 
 Start-Sleep -Seconds 5
 
-Write-Host "Storing SPN appId..." -ForegroundColor Yellow
-az keyvault secret set \
-    --vault-name $backend_kv \
-    --name $backend_SPNappId_Name_kv_sc \
+Write-Host "Storing SPN appId..." -ForegroundColor Yellow 
+az keyvault secret set `
+    --vault-name $backend_kv `
+    --name $backend_SPNappId_Name_kv_sc `
     --value $backend_SPNappId
 
 Start-Sleep -Seconds 5
@@ -243,71 +250,73 @@ az devops configure --defaults project=$backend_project
 Start-Sleep -Seconds 5
 
 Write-Host "Creating Azure DevOps service endpoint..." -ForegroundColor Yellow
-az devops service-endpoint azurerm create \
-    --azure-rm-service-principal-id $backend_SPNappId \
-    --azure-rm-subscription-id $backend_SUBid \
-    --azure-rm-subscription-name $backend_SUBName \
-    --azure-rm-tenant-id $backend_TNTid \
-    --name $backend_AZDOSrvConnName \
-    --org $backend_org \
+az devops service-endpoint azurerm create `
+    --azure-rm-service-principal-id $backend_SPNappId `
+    --azure-rm-subscription-id $backend_SUBid `
+    --azure-rm-subscription-name $backend_SUBName `
+    --azure-rm-tenant-id $backend_TNTid `
+    --name $backend_AZDOSrvConnName `
+    --org $backend_org `
     --project $backend_project
 
 Start-Sleep -Seconds 5
 
 Write-Host "Creating the variable group..." -ForegroundColor Yellow
-az pipelines variable-group create \
-    --organization $backend_org \
-    --project $backend_project \
-    --name $backend_VBGroup \
-    --description $description \
-    --variables foo=bar \
+az pipelines variable-group create `
+    --organization $backend_org `
+    --project $backend_project `
+    --name $backend_VBGroup `
+    --description $description `
+    --variables foo=bar `
     --authorize true
 
-$backend_VBGroupID = $(az pipelines variable-group list --organization $backend_org --project $backend_project --query "[?name=='$backend_VBGroup'].id" -o tsv)
+$backend_VBGroupID = $(az pipelines variable-group list `
+        --organization $backend_org `
+        --project $backend_project `
+        --query "[?name=='$backend_VBGroup'].id" -o tsv)
 
-az pipelines variable-group update \
-    --id $backend_VBGroupID \
-    --org $backend_org \
-    --project $backend_project \
+az pipelines variable-group update `
+    --id $backend_VBGroupID `
+    --org $backend_org `
+    --project $backend_project `
     --authorize true
 
 Start-Sleep -Seconds 5
 
 Write-Host "Creating pipeline for tfazlab project..." -ForegroundColor Yellow
-az pipelines create \
-    --name $backend_PipeBuild_Name \
-    --description $backend_PipeDesc \
-    --detect false \
-    --repository $backend_RepoName \
-    --branch main \
-    --yml-path $backend_tfaz_build_yml \
-    --repository-type tfsgit \
+az pipelines create `
+    --name $backend_PipeBuild_Name `
+    --description $backend_PipeDesc `
+    --detect false `
+    --repository $backend_RepoName `
+    --branch main `
+    --yml-path $backend_tfaz_build_yml `
+    --repository-type tfsgit `
     --skip-first-run true
 
 Start-Sleep -Seconds 10
 
 Write-Host "Create TF Destroy pipeline for tfazlab project" -ForegroundColor Yellow
-az pipelines create \
-    --name $backend_PipeDest_Name \
-    --description $backend_PipeDesc \
-    --detect false \
-    --repository $backend_RepoName \
-    --branch main \
-    --yml-path $backend_tfdest_yml \
-    --repository-type tfsgit \
+az pipelines create `
+    --name $backend_PipeDest_Name `
+    --description $backend_PipeDesc `
+    --detect false `
+    --repository $backend_RepoName `
+    --branch main `
+    --yml-path $backend_tfdest_yml `
+    --repository-type tfsgit `
     --skip-first-run true
 
 Start-Sleep -Seconds 10
 
 Write-Host "Allowing AZDO ACCESS..." -ForegroundColor Yellow
-$backend_EndPid \
-= az devops service-endpoint list \
---query "[?name=='$backend_AZDOSrvConnName'].id" \
--o tsv
+$backend_EndPid = az devops service-endpoint list `
+    --query "[?name=='$backend_AZDOSrvConnName'].id" `
+    -o tsv
 
-az devops service-endpoint update \
---detect false \ 
---id $backend_EndPid \
---enable-for-all true \
+az devops service-endpoint update `
+    --detect false `
+    --id $backend_EndPid `
+    --enable-for-all true `
 
 Write-Host "Done!" -ForegroundColor Green
