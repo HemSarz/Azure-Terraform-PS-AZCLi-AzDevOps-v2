@@ -4,48 +4,44 @@ trigger:
       - main
   paths:
     include:
-      - /variables.tf
-      - /infra.tf
+      - variables.tf
+      - infra.tf
 
 pool:
   vmImage: ubuntu-latest
 
 variables:
-  - group: hawaVB
+  -group: hawaVB
 
 steps:
-  - task: TerraformInstaller@1
-    displayName: Install Terraform
-    inputs:
-      terraformVersion: "latest"
-
   - task: TerraformTaskV4@4
-    displayName: Terraform Init
+    displayName: "Terraform Init"
     inputs:
       provider: "azurerm"
       command: "init"
-      backendServiceArm: "$(AZDOName-kv)"
+      backendServiceArm: "$(AZDOName)"
       backendAzureRmResourceGroupName: "$(RGName)"
       backendAzureRmStorageAccountName: "$(STGName)"
-      backendAzureRmContainerName: "$(backend_ContName)"
-      backendAzureRmKey: "$(backendAzureRMKey)"
+      backendAzureRmContainerName: "$(ContName)"
+      backendAzureRmKey: "$(TFStatefileName)"
 
   - task: TerraformTaskV4@4
-    displayName: Terraform Validate
+    displayName: "Terraform Validate"
     inputs:
       provider: "azurerm"
       command: "validate"
 
   - task: TerraformTaskV4@4
-    displayName: Terraform Plan
+    displayName: "Terraform Plan"
     inputs:
       provider: "azurerm"
       command: "plan"
-      environmentServiceNameAzureRM: "$(backend_AZDOSrvConnName)"
+      environmentServiceNameAzureRM: "$(AZDOName)"
 
   - task: TerraformTaskV4@4
-    displayName: Terraform Apply
+    displayName: "Terraform Apply"
+    condition: succeeded('Terraform Validate')
     inputs:
       provider: "azurerm"
       command: "apply"
-      environmentServiceNameAzureRM: "$(backend_AZDOSrvConnName)"
+      environmentServiceNameAzureRM: "$(AZDOName)"

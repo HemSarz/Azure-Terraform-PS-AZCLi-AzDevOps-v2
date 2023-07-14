@@ -3,10 +3,10 @@ data "azurerm_client_config" "current" {}
 data "azuread_client_config" "current" {}
 data "azurerm_subscription" "primary" {}
 
-############# NSG | Client data
-data "http" "clientip" {
-  url = "https://ipv4.icanhazip.com/"
-}
+############# NSG | Client data || Will retrieve local IP if the code is run locally. In AZ DevOps it will retrieve Agent IP
+#data "http" "clientip" {
+#url = "https://ipv4.icanhazip.com/"
+#}
 
 ############# NSG | Client data
 
