@@ -134,5 +134,3 @@ stages:
                 **/*.tfvars
                 **/*.TfazBuildPlan
               TargetFolder: "$ASdDir)/$(tfazPlanFolderPath)"
-
-          #
