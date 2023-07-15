@@ -3,6 +3,9 @@
 resource "azurerm_resource_group" "tfaz-rg" {
   name     = var.tfaz-rg_label
   location = var.location
+  tags = {
+    environment = var.env-tfaz-dev
+  }
 }
 
 ############ Storage Account ############
@@ -14,6 +17,12 @@ resource "azurerm_storage_account" "tfaz-stg" {
   depends_on               = [azurerm_resource_group.tfaz-rg]
   account_tier             = "Standard"
   account_replication_type = "LRS"
+
+
+  tags = {
+    environment = var.env-tfaz-dev
+
+  }
 }
 
 #### Storage Container #####
@@ -55,6 +64,10 @@ resource "azurerm_key_vault" "tfaz-kv" {
     storage_permissions = ["Get", "List", "Set"]
   }
 
+  tags = {
+    environment = var.env-tfaz-dev
+  }
+
 }
 
 ############ KV Secrets ############
@@ -75,6 +88,11 @@ resource "azurerm_key_vault_secret" "kv-sc-tfaz-vm-pass" {
   depends_on = [
     azurerm_key_vault.tfaz-kv
   ]
+
+  tags = {
+    environment = var.env-tfaz-dev
+  }
+
 }
 
 ############ Admin User ############
@@ -91,6 +109,7 @@ resource "azuread_user" "tfaz-dc01-admin" {
   user_principal_name = var.tfaz-dc01-admin_upn
   display_name        = azurerm_key_vault_secret.kv-sc-tfaz-vmadmin.value
   password            = random_password.vm-admin-pass.result
+
 }
 
 ############ Virtual Network ############
@@ -100,6 +119,10 @@ resource "azurerm_virtual_network" "tfaz-vnet1" {
   location            = azurerm_resource_group.tfaz-rg.location
   resource_group_name = azurerm_resource_group.tfaz-rg.name
   address_space       = [var.tfaz-vnet1-subnet1-addr-space]
+
+  tags = {
+    environment = var.env-tfaz-dev
+  }
 }
 
 resource "azurerm_virtual_network" "tfaz-vnet2" {
@@ -107,6 +130,11 @@ resource "azurerm_virtual_network" "tfaz-vnet2" {
   location            = var.location
   resource_group_name = azurerm_resource_group.tfaz-rg.name
   address_space       = [var.tfaz-vnet2-subnet1-addr-space]
+
+  tags = {
+    environment = var.env-tfaz-dev
+  }
+
 }
 
 ############ Virtual Network: Subnet1 ############
@@ -145,6 +173,11 @@ resource "azurerm_network_interface" "tfaz-netint-dc01" {
     private_ip_address            = var.tfaz-netwint-priv-ip-dc01
     public_ip_address_id          = azurerm_public_ip.tfaz-dc01-pip.id
   }
+
+  tags = {
+    environment = var.env-tfaz-dev
+  }
+
 }
 
 ############ Virtual Machine ############
@@ -171,6 +204,11 @@ resource "azurerm_windows_virtual_machine" "tfaz-vm-dco1" {
     sku       = var.storageimage_sku
     version   = var.storageimage_version
   }
+
+  tags = {
+    environment = var.env-tfaz-dev
+  }
+
 }
 
 ############ Public IP ############
@@ -180,6 +218,10 @@ resource "azurerm_public_ip" "tfaz-dc01-pip" {
   resource_group_name = azurerm_resource_group.tfaz-rg.name
   location            = azurerm_resource_group.tfaz-rg.location
   allocation_method   = "Static"
+
+  tags = {
+    environment = var.env-tfaz-dev
+  }
 
 }
 
