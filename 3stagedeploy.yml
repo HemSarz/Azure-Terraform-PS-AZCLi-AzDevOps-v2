@@ -38,7 +38,7 @@ pool:
 #################################### Configuration: Publish stage ####################################
 
 stages:
-  - stage: Publish Plan
+  - stage: Publish_Plan
     jobs:
       - job: Publish
         displayName: "Publish"
@@ -78,7 +78,7 @@ stages:
 
               ############################################## Configuration: Build Stage ##############################################
 
-  - stage: Build Artifact Plan
+  - stage: Build_Artifact_Plan
     jobs:
       - job: Build
         displayName: "Build"
