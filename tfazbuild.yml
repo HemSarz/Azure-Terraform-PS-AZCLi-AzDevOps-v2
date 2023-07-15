@@ -4,18 +4,23 @@ trigger:
       - main
   paths:
     include:
-      - variables.tf
-      - infra.tf
+      - /variables.tf
+      - /main.tf
 
 pool:
   vmImage: ubuntu-latest
 
 variables:
-  -group: hawaVB
+  - group: hawaVB
 
 steps:
+  - task: TerraformInstaller@1
+    displayName: Install Terraform
+    inputs:
+      terraformVersion: "latest"
+
   - task: TerraformTaskV4@4
-    displayName: "Terraform Init"
+    displayName: Terraform Init
     inputs:
       provider: "azurerm"
       command: "init"
@@ -26,21 +31,20 @@ steps:
       backendAzureRmKey: "$(TFStatefileName)"
 
   - task: TerraformTaskV4@4
-    displayName: "Terraform Validate"
+    displayName: Terraform Validate
     inputs:
       provider: "azurerm"
       command: "validate"
 
   - task: TerraformTaskV4@4
-    displayName: "Terraform Plan"
+    displayName: Terraform Plan
     inputs:
       provider: "azurerm"
       command: "plan"
       environmentServiceNameAzureRM: "azdo-tfaz-conn"
 
   - task: TerraformTaskV4@4
-    displayName: "Terraform Apply"
-    condition: succeeded('Terraform Validate')
+    displayName: Terraform Apply
     inputs:
       provider: "azurerm"
       command: "apply"
