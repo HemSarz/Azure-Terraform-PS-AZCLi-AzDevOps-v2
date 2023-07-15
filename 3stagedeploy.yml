@@ -35,7 +35,7 @@ pool:
       values:
         - Deploy
 
-############################################## Configuration: Publish stage ##############################################
+#################################### Configuration: Publish stage ####################################
 
 stages:
   - stage: Publish Plan
