@@ -12,5 +12,5 @@ data "azurerm_subscription" "primary" {}
 
 ############ Admin User VM
 data "azuread_user" "tfaz-dc01-admin" {
-  user_principal_name = azuread_user.tfaz-dc01-admin.display_name
+  user_principal_name = var.tfaz-dc01-admin_upn
 }

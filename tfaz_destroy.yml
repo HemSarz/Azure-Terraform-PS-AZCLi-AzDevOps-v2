@@ -7,15 +7,15 @@ variables:
   - group: hawaVB
 
 steps:
-  - task: TerraformInstaller@1
+  - task: TerraformInstaller@0
     displayName: Install Terraform
     inputs:
       terraformVersion: "latest"
 
-  - task: TerraformTaskV4@2
+  - task: TerraformCLI@0
     displayName: Terraform Init
     inputs:
-      provider: "azurerm"
+      backendType: azurerm
       command: "init"
       backendServiceArm: "$(AZDOName)"
       backendAzureRmResourceGroupName: "$(RGName)"
@@ -23,9 +23,9 @@ steps:
       backendAzureRmContainerName: "$(ContName)"
       backendAzureRmKey: "$(TFStatefileName)"
 
-  - task: TerraformTaskV4@2
+  - task: TerraformCLI@0
     displayName: Terraform Destroy
     inputs:
-      provider: "azurerm"
+      backendType: azurerm
       command: "destroy"
       commandOptions: "--auto-approve"
