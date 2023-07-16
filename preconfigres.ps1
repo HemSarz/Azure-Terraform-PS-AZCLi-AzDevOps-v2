@@ -12,6 +12,7 @@ $backendAzureRmKey = "terraform.tfstate"
 $MSGraphApi = "00000003-0000-0000-c000-000000000000" # MS Graph API Id
 $appDirRoleId = "19dbc75e-c2e2-444c-a770-ec69d8559fc7=Role" # Directory.ReadWrite.All | Not allowed in delete Users
 $appUsrRoleId = "df021288-bdef-4463-88db-98f22de89214=Role" # User.Read.All | Allowed in delete Users [Terraform Destroy]
+# User.ReadWrite.all # "741f803b-c850-494e-b5df-cde7c675a1ca=Role"
 #$scope = "Directory.ReadWrite.All"
 
 # Key Vault variables | Generate a random number between 1 and 999
