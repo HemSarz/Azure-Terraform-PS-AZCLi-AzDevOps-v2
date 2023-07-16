@@ -240,7 +240,7 @@ resource "azurerm_network_security_group" "tfaz-nsg-client" {
     protocol                   = "*"
     source_port_range          = "*"
     destination_port_range     = "3389"
-    source_address_prefix      = "82.164.170.66"
+    source_address_prefix      = "YourPublicIP"
     destination_address_prefix = "*"
   }
 
