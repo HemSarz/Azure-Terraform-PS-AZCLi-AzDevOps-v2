@@ -66,27 +66,6 @@ variable "tfaz-dc01-admin_upn" {
   default = "dc01admin@yourdomain"
 }
 
-#variable "tfaz-keyvault-label" {
-# type        = string
-# default     = "tfaz-infra-kv"
-#description = "description"
-#}
-
-#variable "tenant-id-label" {
-#type    = string
-#default = "kv-sc-tnt-id"
-#}
-
-#variable "subscription-id-label" {
-#  type    = string
-# default = "kv-sc-subid"
-#}
-
-#variable "spn-appId-label" {
-# type    = string
-#default = "kv-sc-appId-spn"
-#}
-
 ###############################################################
 # Virtual Network 1 
 ###############################################################
