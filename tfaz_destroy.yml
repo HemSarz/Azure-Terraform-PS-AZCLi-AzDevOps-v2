@@ -5,7 +5,6 @@ pool:
 
 variables:
   - group: hawaVB
-
 steps:
   - task: TerraformInstaller@0
     displayName: Install Terraform
@@ -15,9 +14,10 @@ steps:
   - task: TerraformCLI@0
     displayName: Terraform Init
     inputs:
-      backendType: azurerm
       command: "init"
-      backendServiceArm: "$(AZDOName)"
+      backendType: "azurerm"
+      workingDirectory: "$(workingDir)"
+      backendServiceArm: "$(azdoEndP)"
       backendAzureRmResourceGroupName: "$(RGName)"
       backendAzureRmStorageAccountName: "$(STGName)"
       backendAzureRmContainerName: "$(ContName)"
